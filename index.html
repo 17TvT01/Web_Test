@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Store</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
+    <!-- Font Awesome -->
+    <link 
+      rel="stylesheet" 
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <!-- Initialize global functions -->
+    <script>
+      // Handle password visibility toggle
+      document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('toggle-password')) {
+          const input = e.target.previousElementSibling;
+          if (input && input.type === 'password') {
+            input.type = 'text';
+            e.target.classList.remove('fa-eye');
+            e.target.classList.add('fa-eye-slash');
+          } else if (input) {
+            input.type = 'password';
+            e.target.classList.remove('fa-eye-slash');
+            e.target.classList.add('fa-eye');
+          }
+        }
+      });
+
+      // Initialize scroll restoration
+      if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+      }
+
+      // Back to top visibility
+      window.addEventListener('scroll', function() {
+        const backToTop = document.querySelector('.back-to-top');
+        if (backToTop) {
+          backToTop.classList.toggle('visible', window.scrollY > 200);
+        }
+      });
+
+      // Handle overlay clicks
+      document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('form-overlay')) {
+          const formOverlay = e.target;
+          formOverlay.classList.remove('active');
+          document.querySelector('.dropdown-overlay')?.classList.remove('active');
+        }
+      });
+
+      // Handle ESC key
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          document.querySelectorAll('.form-overlay.active').forEach(overlay => {
+            overlay.classList.remove('active');
+          });
+          document.querySelector('.dropdown-overlay')?.classList.remove('active');
+        }
+      });
+    </script>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
