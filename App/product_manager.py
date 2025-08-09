@@ -60,8 +60,8 @@ class ProductManager:
                 keys.append(key)
 
         # Bộ lọc riêng cho từng danh mục
-        if category == 'cake':
-            cake_filters = {
+        category_filters = {
+            'cake': {
                 'socola': ['socola', 'chocolate'],
                 'vani': ['vani', 'vanilla'],
                 'dâu': ['dâu', 'strawberry'],
@@ -70,13 +70,8 @@ class ProductManager:
                 'cupcake': ['cupcake'],
                 'sinh nhật': ['sinh nhật', 'birthday'],
                 'ít ngọt': ['ít ngọt', 'less sugar'],
-            }
-            for key, keywords in cake_filters.items():
-                if any(keyword in text for keyword in keywords):
-                    keys.append(key)
-
-        elif category == 'drink':
-            drink_filters = {
+            },
+            'drink': {
                 'trà sữa': ['trà sữa', 'milk tea'],
                 'cà phê': ['cà phê', 'coffee'],
                 'nước ép': ['nước ép', 'juice'],
@@ -85,22 +80,19 @@ class ProductManager:
                 'đá xay': ['đá xay', 'ice blended'],
                 'ít đá': ['ít đá'],
                 'ít ngọt': ['ít ngọt'],
-            }
-            for key, keywords in drink_filters.items():
-                if any(keyword in text for keyword in keywords):
-                    keys.append(key)
-
-        elif category == 'food':
-            food_filters = {
+            },
+            'food': {
                 'món chính': ['cơm', 'phở', 'bún', 'mì'],
                 'ăn vặt': ['ăn vặt', 'snack', 'khoai tây chiên'],
                 'cay': ['cay', 'spicy'],
                 'không cay': ['không cay'],
             }
-            for key, keywords in food_filters.items():
-                if any(keyword in text for keyword in keywords):
-                    keys.append(key)
-        
+        }
+
+        for key, keywords in category_filters.get(category, {}).items():
+            if any(keyword in text for keyword in keywords):
+                keys.append(key)
+
         # Loại bỏ các key trùng lặp
         return list(set(keys))
 
