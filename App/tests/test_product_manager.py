@@ -54,9 +54,9 @@ def test_add_product_with_attributes(product_manager):
     assert product is not None
     assert product['name'] == "Test Cake"
     assert product['category'] == "cake"
-    assert 'attributes' in product
-    assert 'Birthday' in product['attributes']['occasion']
-    assert 'Chocolate' in product['attributes']['flavor']
+    assert 'filters' in product
+    assert 'Birthday' in product['filters']['occasion']
+    assert 'Chocolate' in product['filters']['flavor']
 
 def test_delete_product(product_manager):
     # Add a product to delete
@@ -123,5 +123,5 @@ def test_get_products_by_category(product_manager):
 
 def test_get_filter_options(product_manager):
     options = product_manager.get_filter_options('cake')
-    assert 'socola' in options
-    assert 'khuyến mãi' in options
+    assert 'flavor' in options
+    assert 'Kem bơ' in options['flavor']
