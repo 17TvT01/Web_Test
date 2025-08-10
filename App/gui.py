@@ -25,6 +25,7 @@ class StoreGUI:
         self.current_product_id = None  # For editing
         self.editing_mode = False
         self.filter_vars = {} # Để lưu trạng thái của các checkbox lọc
+        self.form_filter_vars = {}  # Lưu trạng thái key lọc khi thêm sản phẩm
 
         # Main container with tab control
         self.tab_control = ttk.Notebook(root)
@@ -184,6 +185,11 @@ class StoreGUI:
             state="readonly"
         )
         category_combo.pack(fill=tk.X, pady=(0, 10))
+        self.new_category_var.trace('w', lambda *args: self._update_form_filter_options())
+
+        ttk.Label(form_frame, text="Key lọc sản phẩm:").pack(anchor=tk.W)
+        self.form_filter_frame = ttk.Frame(form_frame)
+        self.form_filter_frame.pack(fill=tk.X, pady=(0, 10))
 
         # Tạo frame cố định ở dưới cùng cho các nút
         bottom_frame = ttk.Frame(self.left_panel)
@@ -431,6 +437,7 @@ class StoreGUI:
                 'drink': 'Đồ uống'
             }
             self.new_category_var.set(category_display.get(product['category']))
+            self._update_form_filter_options(product.get('filters', {}).get('ai_keys', []))
 
             # Show current image
             if product['image_url']:
@@ -478,6 +485,28 @@ class StoreGUI:
                 cb = ttk.Checkbutton(self.dynamic_filter_frame, text=f.capitalize(), variable=var, command=lambda: self.load_products(update_filters=False))
                 cb.pack(anchor=tk.W, padx=10)
                 self.filter_vars[f] = var
+
+    def _update_form_filter_options(self, selected_keys=None):
+        """Cập nhật các checkbox key lọc trong form sản phẩm."""
+        for widget in self.form_filter_frame.winfo_children():
+            widget.destroy()
+        self.form_filter_vars.clear()
+
+        category_display = self.new_category_var.get()
+        category_map = {
+            "Bánh kem": "cake",
+            "Đồ ăn": "food",
+            "Đồ uống": "drink",
+        }
+        category = category_map.get(category_display)
+        if not category:
+            return
+
+        options = self.product_manager.get_filter_options(category)
+        for opt in options:
+            var = tk.BooleanVar(value=opt in selected_keys if selected_keys else False)
+            ttk.Checkbutton(self.form_filter_frame, text=opt.capitalize(), variable=var).pack(anchor=tk.W, padx=10)
+            self.form_filter_vars[opt] = var
 
     def submit_product(self):
         try:
@@ -529,6 +558,9 @@ class StoreGUI:
                 else:
                     image_path = self.selected_image_path
 
+            selected_keys = [k for k, v in self.form_filter_vars.items() if v.get()]
+            attributes = {'ai_keys': selected_keys} if selected_keys else None
+
             if self.editing_mode:
                 # Update existing product
                 success = self.product_manager.update_product(
@@ -538,7 +570,8 @@ class StoreGUI:
                     category=category,
                     quantity=quantity,
                     description=description,
-                    image_url=image_path
+                    image_url=image_path,
+                    attributes=attributes
                 )
 
                 if success:
@@ -554,7 +587,8 @@ class StoreGUI:
                     category=category,
                     quantity=quantity,
                     description=description,
-                    image_url=image_path
+                    image_url=image_path,
+                    attributes=attributes
                 )
 
                 if product_id:

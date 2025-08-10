@@ -119,3 +119,9 @@ def test_get_products_by_category(product_manager):
     assert any(p['name'] == "Test Food 1" for p in foods)
     assert all(p['category'] == "cake" for p in cakes)
     assert all(p['category'] == "food" for p in foods)
+
+
+def test_get_filter_options(product_manager):
+    options = product_manager.get_filter_options('cake')
+    assert 'socola' in options
+    assert 'khuyến mãi' in options

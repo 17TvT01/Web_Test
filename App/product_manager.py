@@ -1,5 +1,5 @@
 import json
-from database import Database
+from .database import Database
 from mysql.connector import Error
 import os
 
@@ -100,9 +100,21 @@ class ProductManager:
             for key, keywords in food_filters.items():
                 if any(keyword in text for keyword in keywords):
                     keys.append(key)
-        
+
         # Loại bỏ các key trùng lặp
         return list(set(keys))
+
+    def get_filter_options(self, category):
+        """Trả về danh sách các key lọc có thể áp dụng cho một danh mục."""
+        common_filters = ['khuyến mãi', 'mới', 'bán chạy']
+        category_filters = {
+            'cake': ['socola', 'vani', 'dâu', 'matcha', 'tiramisu', 'cupcake', 'sinh nhật', 'ít ngọt'],
+            'drink': ['trà sữa', 'cà phê', 'nước ép', 'sinh tố', 'trân châu', 'đá xay', 'ít đá', 'ít ngọt'],
+            'food': ['món chính', 'ăn vặt', 'cay', 'không cay'],
+        }
+        options = set(common_filters)
+        options.update(category_filters.get(category, []))
+        return sorted(options)
 
 
     def add_product(self, name, price, category, quantity=0, description=None, image_url=None, attributes=None):
