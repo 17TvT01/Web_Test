@@ -65,12 +65,15 @@ def login():
 @app.route('/products', methods=['GET'])
 def get_products():
     products = product_manager.get_all_products()
-    # Convert products to JSON serializable format
-    for p in products:
-        # Convert attributes dict to list of key-value pairs for JSON serialization
-        if 'attributes' in p and isinstance(p['attributes'], dict):
-            p['attributes'] = [{'type': k, 'value': v} for k, vals in p['attributes'].items() for v in vals]
     return jsonify(products)
+
+@app.route('/filter-options', methods=['GET'])
+def get_filter_options():
+    category = request.args.get('category')
+    if not category:
+        return jsonify({'error': 'Missing category'}), 400
+    options = product_manager.get_filter_options(category)
+    return jsonify(options)
 
 @app.route('/orders', methods=['GET'])
 def get_orders():

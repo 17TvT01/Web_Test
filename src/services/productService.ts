@@ -28,11 +28,7 @@ class ProductService {
                 image: p.image_url || '/images/default-product.jpg',
                 category: p.category.toLowerCase(), // Đảm bảo category được chuyển thành chữ thường
                 rating: p.rating || 0,
-                filters: p.attributes ? p.attributes.reduce((acc: any, attr: any) => {
-                    if (!acc[attr.type]) acc[attr.type] = [];
-                    acc[attr.type].push(attr.value);
-                    return acc;
-                }, {}) : {},
+                filters: p.filters || {},
                 inStock: p.quantity > 0,
                 onSale: false,
                 salePrice: null,

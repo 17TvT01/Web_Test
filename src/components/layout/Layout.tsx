@@ -13,19 +13,12 @@ import { Login } from '../Auth/Login';
 import { Register } from '../Auth/Register';
 import { AppRoutes } from '../../routes';
 import { uiService } from '../../services/uiService';
-import { 
-    MainCategory, 
-    CAKE_FILTERS, 
-    FOOD_FILTERS, 
-    DRINK_FILTERS, 
+import { filterService } from '../../services/filterService';
+import {
+    MainCategory,
     FilterState,
-    SORT_OPTIONS 
+    SORT_OPTIONS
 } from '../../types';
-
-type FilterConfig = {
-    key: string;
-    title: string;
-};
 
 export const Layout = () => {
     const location = useLocation();
@@ -35,6 +28,7 @@ export const Layout = () => {
     const [selectedFilters, setSelectedFilters] = useState<FilterState>({});
     const [sortBy, setSortBy] = useState<string>('');
     const [searchQuery, setSearchQuery] = useState('');
+    const [filterOptions, setFilterOptions] = useState<Record<string, string[]>>({});
 
     useEffect(() => {
         // Initialize UI service after components are mounted
@@ -48,6 +42,19 @@ export const Layout = () => {
         setSelectedFilters({}); // Reset filters when changing category
         setSortBy(''); // Reset sort when changing category
     };
+
+    useEffect(() => {
+        if (activeCategory !== 'all') {
+            filterService.getOptions(activeCategory)
+                .then(setFilterOptions)
+                .catch(err => {
+                    console.error('Failed to load filter options', err);
+                    setFilterOptions({});
+                });
+        } else {
+            setFilterOptions({});
+        }
+    }, [activeCategory]);
 
     const handleFilterChange = (filterType: string, value: string) => {
         setSelectedFilters(prev => {
@@ -80,31 +87,17 @@ export const Layout = () => {
         return Object.values(selectedFilters).reduce((count, values) => count + values.length, 0);
     };
 
-    const renderFilters = () => {
-        let currentFilters: typeof CAKE_FILTERS | typeof FOOD_FILTERS | typeof DRINK_FILTERS;
-        let filterSections: FilterConfig[];
+    const FILTER_TITLES: Record<string, string> = {
+        occasion: 'Dịp sử dụng',
+        flavor: 'Hương vị',
+        ingredient: 'Thành phần chính',
+        size: 'Kích thước',
+        type: 'Loại'
+    };
 
-        switch (activeCategory) {
-            case 'cake':
-                currentFilters = CAKE_FILTERS;
-                filterSections = [
-                    { key: 'occasion', title: 'Dịp sử dụng' },
-                    { key: 'flavor', title: 'Hương vị' },
-                    { key: 'ingredient', title: 'Thành phần chính' },
-                    { key: 'size', title: 'Kích thước' }
-                ];
-                break;
-            case 'food':
-                currentFilters = FOOD_FILTERS;
-                filterSections = [{ key: 'type', title: 'Loại đồ ăn' }];
-                break;
-            case 'drink':
-                currentFilters = DRINK_FILTERS;
-                filterSections = [{ key: 'type', title: 'Loại nước' }];
-                break;
-            default:
-                return null;
-        }
+    const renderFilters = () => {
+        const entries = Object.entries(filterOptions);
+        if (entries.length === 0) return null;
 
         const filterCount = getSelectedFiltersCount();
 
@@ -119,19 +112,19 @@ export const Layout = () => {
                     )}
                 </div>
 
-                {filterSections.map(section => (
-                    <div key={section.key} className="filter-section">
-                        <h4>{section.title}</h4>
+                {entries.map(([key, options]) => (
+                    <div key={key} className="filter-section">
+                        <h4>{FILTER_TITLES[key] || key}</h4>
                         <div className="filter-options">
-                            {(currentFilters as any)[section.key].map((option: string) => (
+                            {options.map(option => (
                                 <div key={option} className="filter-option">
                                     <input
                                         type="checkbox"
-                                        id={`${section.key}-${option}`}
-                                        checked={selectedFilters[section.key]?.includes(option) || false}
-                                        onChange={() => handleFilterChange(section.key, option)}
+                                        id={`${key}-${option}`}
+                                        checked={selectedFilters[key]?.includes(option) || false}
+                                        onChange={() => handleFilterChange(key, option)}
                                     />
-                                    <label htmlFor={`${section.key}-${option}`}>{option}</label>
+                                    <label htmlFor={`${key}-${option}`}>{option}</label>
                                 </div>
                             ))}
                         </div>

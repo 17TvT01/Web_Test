@@ -85,7 +85,67 @@ class Database:
                     FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
                 )
             ''')
-            
+
+            # Table of available filter keys for each category
+            self.cursor.execute('''
+                CREATE TABLE IF NOT EXISTS filter_keys (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    category ENUM('cake', 'food', 'drink') NOT NULL,
+                    filter_type VARCHAR(50) NOT NULL,
+                    filter_value VARCHAR(255) NOT NULL
+                )
+            ''')
+
+            # Seed default filter keys if none exist
+            self.cursor.execute('SELECT COUNT(*) FROM filter_keys')
+            if self.cursor.fetchone()[0] == 0:
+                default_keys = {
+                    'cake': {
+                        'occasion': [
+                            'Sinh nhật',
+                            'Đám cưới / hỏi',
+                            'Lễ tình nhân / Kỷ niệm',
+                            'Lễ hội',
+                            'Tặng đối tác / doanh nghiệp',
+                            'Khác'
+                        ],
+                        'flavor': [
+                            'Kem bơ',
+                            'Kem tươi',
+                            'Mousse',
+                            'Tiramisu',
+                            'Bánh kem lạnh'
+                        ],
+                        'ingredient': [
+                            'Trái cây tươi',
+                            'Socola',
+                            'Phô mai / cream cheese',
+                            'Trà xanh / matcha',
+                            'Các loại hạt'
+                        ],
+                        'size': [
+                            'Mini (1 người)',
+                            'Nhỏ – Trung bình (2-4 người)',
+                            'Lớn (trên 6 người)',
+                            'Nhiều tầng',
+                            'Hình dạng đặc biệt'
+                        ]
+                    },
+                    'food': {
+                        'type': ['Mì', 'Bánh', 'Pizza', 'Snack', 'Đồ chiên']
+                    },
+                    'drink': {
+                        'type': ['Nước ngọt', 'Nước ép trái cây', 'Trà sữa', 'Cà phê', 'Sinh tố']
+                    }
+                }
+                for category, filters in default_keys.items():
+                    for f_type, values in filters.items():
+                        for value in values:
+                            self.cursor.execute(
+                                'INSERT INTO filter_keys (category, filter_type, filter_value) VALUES (%s, %s, %s)',
+                                (category, f_type, value)
+                            )
+
             # Create orders table
             self.cursor.execute('''
                 CREATE TABLE IF NOT EXISTS orders (

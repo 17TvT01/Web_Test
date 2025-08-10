@@ -105,16 +105,19 @@ class ProductManager:
         return list(set(keys))
 
     def get_filter_options(self, category):
-        """Trả về danh sách các key lọc có thể áp dụng cho một danh mục."""
-        common_filters = ['khuyến mãi', 'mới', 'bán chạy']
-        category_filters = {
-            'cake': ['socola', 'vani', 'dâu', 'matcha', 'tiramisu', 'cupcake', 'sinh nhật', 'ít ngọt'],
-            'drink': ['trà sữa', 'cà phê', 'nước ép', 'sinh tố', 'trân châu', 'đá xay', 'ít đá', 'ít ngọt'],
-            'food': ['món chính', 'ăn vặt', 'cay', 'không cay'],
-        }
-        options = set(common_filters)
-        options.update(category_filters.get(category, []))
-        return sorted(options)
+        """Return available filter keys for a given category."""
+        try:
+            self.ensure_connection()
+            sql = '''SELECT filter_type, filter_value FROM filter_keys WHERE category = %s'''
+            self.db.cursor.execute(sql, (category,))
+            rows = self.db.cursor.fetchall()
+            options = {}
+            for f_type, f_value in rows:
+                options.setdefault(f_type, []).append(f_value)
+            return options
+        except Error as e:
+            print(f"Error getting filter options: {e}")
+            return {}
 
 
     def add_product(self, name, price, category, quantity=0, description=None, image_url=None, attributes=None):
@@ -318,71 +321,7 @@ class ProductManager:
             print(f"Error getting product: {e}")
             return None
 
-    def get_all_products(self, category=None):
-        try:
-            print("Đang kết nối database để lấy sản phẩm...")
-            self.ensure_connection()
-            print("Đã kết nối database thành công")
-            
-            # Base query
-            sql = '''SELECT p.*, GROUP_CONCAT(
-                        CONCAT(pa.attribute_type, ':', pa.attribute_value)
-                        SEPARATOR '|'
-                    ) as attributes
-                    FROM products p
-                    LEFT JOIN product_attributes pa ON p.id = pa.product_id'''
-            
-            if category:
-                sql += ' WHERE p.category = %s'
-            
-            sql += ' GROUP BY p.id ORDER BY p.id'  # Add ORDER BY to maintain ID sequence
-            
-            if category:
-                self.db.cursor.execute(sql, (category,))
-            else:
-                self.db.cursor.execute(sql)
-                
-            results = self.db.cursor.fetchall()
-            print(f"Đã tìm thấy {len(results)} sản phẩm")
-            
-            # Convert results to list of dictionaries
-            columns = [desc[0] for desc in self.db.cursor.description]
-            products = []
-            
-            for result in results:
-                product = dict(zip(columns, result))
-                
-                # Parse attributes into filters and options
-                raw_attributes = product.pop('attributes', None)
-                filters = {}
-                product['options'] = []
-
-                if raw_attributes:
-                    for attr in raw_attributes.split('|'):
-                        try:
-                            attr_type, attr_value = attr.split(':', 1)
-                            if attr_type == 'options':
-                                # Assuming options are stored as a JSON string
-                                product['options'] = json.loads(attr_value)
-                            else:
-                                if attr_type not in filters:
-                                    filters[attr_type] = []
-                                filters[attr_type].append(attr_value)
-                        except ValueError:
-                            print(f"Warning: Malformed attribute string '{attr}' for product {product['id']}")
-                        except json.JSONDecodeError:
-                             print(f"Warning: Could not decode options JSON for product {product['id']}")
-
-                product['filters'] = filters
-                products.append(product)
-                
-            return products
-            
-        except Error as e:
-            print(f"Lỗi khi lấy sản phẩm từ database: {e}")
-            return []
-
-    def delete_product(self, product_id):        
+    def delete_product(self, product_id):
         try:
             self.ensure_connection()
             
