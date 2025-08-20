@@ -4,6 +4,7 @@ from order_manager import OrderManager
 from flask_cors import CORS
 import mysql.connector
 import hashlib
+import json
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend requests
@@ -64,7 +65,15 @@ def login():
 
 @app.route('/products', methods=['GET'])
 def get_products():
-    products = product_manager.get_all_products()
+    category = request.args.get('category')
+    filters_param = request.args.get('filters')
+    filters = None
+    if filters_param:
+        try:
+            filters = json.loads(filters_param)
+        except (TypeError, ValueError):
+            filters = None
+    products = product_manager.get_all_products(category, filters)
     return jsonify(products)
 
 @app.route('/filter-options', methods=['GET'])

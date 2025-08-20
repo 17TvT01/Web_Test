@@ -12,9 +12,17 @@ class ProductService {
         price: null
     };
 
-    async loadProducts(): Promise<void> {
+    async loadProducts(category?: string, filters: Record<string, any> = {}): Promise<void> {
         try {
-            const response = await fetch('http://localhost:5000/products');
+            const params = new URLSearchParams();
+            if (category) {
+                params.append('category', category);
+            }
+            if (filters && Object.keys(filters).length > 0) {
+                params.append('filters', JSON.stringify(filters));
+            }
+            const url = `http://localhost:5000/products${params.toString() ? `?${params.toString()}` : ''}`;
+            const response = await fetch(url);
             if (!response.ok) {
                 throw new Error('Failed to fetch products from backend');
             }
