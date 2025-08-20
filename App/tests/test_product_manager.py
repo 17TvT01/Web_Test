@@ -119,9 +119,39 @@ def test_get_products_by_category(product_manager):
     assert any(p['name'] == "Test Food 1" for p in foods)
     assert all(p['category'] == "cake" for p in cakes)
     assert all(p['category'] == "food" for p in foods)
-
+    
 
 def test_get_filter_options(product_manager):
     options = product_manager.get_filter_options('cake')
     assert 'flavor' in options
     assert 'Kem bơ' in options['flavor']
+
+
+def test_get_products_with_multiple_filters(product_manager):
+    attributes = {
+        'flavor': ['Chocolate'],
+        'occasion': ['Birthday']
+    }
+
+    product_manager.add_product(
+        name="Chocolate Birthday Cake",
+        price=350.00,
+        category="cake",
+        attributes=attributes
+    )
+
+    product_manager.add_product(
+        name="Vanilla Wedding Cake",
+        price=400.00,
+        category="cake",
+        attributes={
+            'flavor': ['Vanilla'],
+            'occasion': ['Wedding']
+        }
+    )
+
+    filters = {'flavor': 'Chocolate', 'occasion': 'Birthday'}
+    results = product_manager.get_all_products('cake', filters)
+
+    assert len(results) == 1
+    assert results[0]['name'] == "Chocolate Birthday Cake"
